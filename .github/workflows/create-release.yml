@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build and Release
     if: startsWith(github.ref, 'refs/tags/v')
+    env:
+      TAG_NAME: ${{ github.ref }}
     runs-on: ubuntu-latest
 
     steps:
@@ -36,8 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
           body: |
             ## ✨新機能
             ## 🐛バグ修正
@@ -54,5 +56,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./release.zip
-          asset_name: release-${{ github.ref }}.zip
+          asset_name: release-${{  env.TAG_NAME }}.zip
           asset_content_type: application/zip
