@@ -23,10 +23,10 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-        
+
       - name: Check if tag matches package.json version
         run: |
-          if [ "$(jq -r '.version' package.json)" != "${{ github.ref }}" ]; then
+          if [ "$(jq -r '.version' package.json)" != "v${{ github.ref.refs.tags }}" ]; then
             echo "Tag version does not match package.json version. Skipping release."
             exit 1
           fi
