@@ -46,18 +46,10 @@ jobs:
 
       - name: Create Release Page
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
-          tag_name: ${{ needs.get-tag.outputs.TAG_NAME }}
-          release_name: Release ${{ needs.get-tag.outputs.TAG_NAME }}
-          body: |
-            ## ✨新機能
-            ## 🐛バグ修正
-            ## 💥破壊的変更
-            ## 🩹軽微な変更
-            ## 📝関連ドキュメント
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          title: Release ${{ needs.get-tag.outputs.TAG_NAME }}
           draft: true
           prerelease: false
 
