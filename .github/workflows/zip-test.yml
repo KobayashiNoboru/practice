@@ -16,3 +16,9 @@ jobs:
 
       - name: ZIP
         run: zip -r test.zip src/assets/
+
+      - name: Upload ZIP file
+        uses: actions/upload-artifact@v3
+        with:
+          name: zip-file
+          path: ./test.zip
