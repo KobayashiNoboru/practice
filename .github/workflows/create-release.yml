@@ -10,6 +10,7 @@ jobs:
   get-tag:
     name: Get Tag Name
     runs-on: ubuntu-latest
+    if: $GITHUB_REF == 'refs/heads/main'
 
     outputs:
       TAG_NAME: ${{ steps.set-tag-name.outputs.TAG_NAME }}
