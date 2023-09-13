@@ -10,11 +10,17 @@ jobs:
   get-tag:
     name: Get Tag Name
     runs-on: ubuntu-latest
-    if: github.ref_name == 'refs/heads/main'
 
     outputs:
       TAG_NAME: ${{ steps.set-tag-name.outputs.TAG_NAME }}
     steps:
+      - name: Check branch
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "This is not the main branch. Skipping get-tag."
+            exit 1
+          fi
+
       - name: Set Tag Name
         id: set-tag-name
         run: echo "TAG_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
