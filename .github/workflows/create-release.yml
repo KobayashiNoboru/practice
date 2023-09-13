@@ -2,48 +2,85 @@ name: Create Release
 
 on:
   push:
-    branches:
-      - main
     tags:
-      - v*
+      - 'v*'
 
 jobs:
+  # タグ名を取得し、 $GITHUB_OUTPUT の TAG_NAME に格納するジョブ
+  get-tag:
+    name: Get Tag Name
+    runs-on: ubuntu-latest
+
+    outputs:
+      TAG_NAME: ${{ steps.set-tag-name.outputs.TAG_NAME }}
+    steps:
+      - name: Set Tag Name
+        id: set-tag-name
+        run: echo "TAG_NAME=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+      # main ブランチをチェックアウトする
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # タグが打たれたブランチに main ブランチがあれば処理を継続する
+      - name: Check tagged branch
+        run: |
+          BRANCHS=$(git branch --contains ${{ steps.set-tag-name.outputs.TAG_NAME }})
+          set -- $BRANCHS
+          for BRANCH in $BRANCHS ; do
+            if [[ "$BRANCH" == "main" ]]; then
+              exit 0
+            fi
+          done
+          exit 1
+
+  # ビルドを行うジョブ
   build:
-    name: Build and Release
+    name: Build
+    needs: get-tag
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Check if tag matches package.json version
-        run: |
-          if [ "$(jq -r '.version' package.json)" != "v${{ github.ref.refs.tags }}" ]; then
-            echo "Tag version does not match package.json version. Skipping release."
-            exit 1
-          fi
-
       - name: Build and ZIP
         run: |
           npm run build
           zip -r release.zip dist/
 
+      - name: Upload ZIP file
+        uses: actions/upload-artifact@v3
+        with:
+          name: zip-file
+          path: ./release.zip
+
+  # リリースページを作成するジョブ
+  create-release:
+    name: Create Release Page
+    needs: [get-tag, build]
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Create Release Page
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ needs.get-tag.outputs.TAG_NAME }}
+          release_name: Release ${{ needs.get-tag.outputs.TAG_NAME }}
           body: |
             ## ✨新機能
             ## 🐛バグ修正
@@ -53,6 +90,11 @@ jobs:
           draft: true
           prerelease: false
 
+      - name: Download ZIP file
+        uses: actions/download-artifact@v3
+        with:
+          name: zip-file
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -60,5 +102,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./release.zip
-          asset_name: release-${{ github.ref.refs.tags }}.zip
+          asset_name: release-${{ needs.get-tag.outputs.TAG_NAME }}.zip
           asset_content_type: application/zip
