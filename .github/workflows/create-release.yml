@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  # タグ名を取得し、 $GITHUB_OUTPUT の TAG_NAME に格納する
+  # タグ名を取得し、 $GITHUB_OUTPUT の TAG_NAME に格納するジョブ
   get-tag:
     name: Get Tag Name
     runs-on: ubuntu-latest
@@ -41,6 +41,12 @@ jobs:
           npm run build
           zip -r release.zip dist/
 
+      - name: Upload ZIP file
+        uses: actions/upload-artifact@v3
+        with:
+          name: zip-file
+          path: ./release.zip
+
   # リリースページを作成するジョブ
   create-release:
     name: Create Release Page
@@ -64,6 +70,11 @@ jobs:
             ## 📝関連ドキュメント
           draft: true
           prerelease: false
+
+      - name: Download ZIP file
+        uses: actions/download-artifact@v3
+        with:
+          name: zip-file
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
