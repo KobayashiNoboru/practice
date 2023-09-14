@@ -17,7 +17,7 @@ jobs:
       - name: ZIP
         run: |
           cd src/
-          zip -r test.zip src/assets/
+          zip -r test.zip assets/
           cd
 
       - name: Upload ZIP file
