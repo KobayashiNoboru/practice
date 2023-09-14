@@ -15,10 +15,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: ZIP
-        run: zip -r test.zip src/assets/
+        run: |
+          cd src/
+          zip -r test.zip src/assets/
+          cd
 
       - name: Upload ZIP file
         uses: actions/upload-artifact@v3
         with:
           name: zip-file
-          path: ./test.zip
+          path: src/test.zip
